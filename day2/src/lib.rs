@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{BufReader, BufRead};
+use std::io::{BufRead, BufReader};
 
 pub fn day2_part1(reader: BufReader<File>) -> i32 {
     let mut position = (0, 0);
@@ -31,7 +31,7 @@ pub fn day2_part2(reader: BufReader<File>) -> i32 {
             "forward" => {
                 position.0 += value;
                 position.1 += aim * value;
-            },
+            }
             "up" => aim -= value,
             "down" => aim += value,
             _ => {}
@@ -40,7 +40,6 @@ pub fn day2_part2(reader: BufReader<File>) -> i32 {
 
     position.0 * position.1
 }
-
 
 #[cfg(test)]
 mod tests {

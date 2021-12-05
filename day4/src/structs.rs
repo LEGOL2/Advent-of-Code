@@ -1,21 +1,24 @@
 #[derive(Debug)]
 pub struct BoardElement {
     pub number: usize,
-    pub is_marked: bool
+    pub is_marked: bool,
 }
 
 impl BoardElement {
     pub fn new(number: usize) -> Self {
         BoardElement {
             number,
-            is_marked: false
+            is_marked: false,
         }
     }
 }
 
 impl Clone for BoardElement {
     fn clone(&self) -> Self {
-        Self { number: self.number.clone(), is_marked: self.is_marked.clone() }
+        Self {
+            number: self.number.clone(),
+            is_marked: self.is_marked.clone(),
+        }
     }
 }
 
@@ -29,7 +32,7 @@ impl Board {
     pub fn new(numbers: Vec<BoardElement>) -> Self {
         Board {
             elements: numbers,
-            has_won: false
+            has_won: false,
         }
     }
 
@@ -45,7 +48,7 @@ impl Board {
     pub fn check_for_win(&self) -> bool {
         'column: for i in 0..5 {
             for j in 0..5 {
-                let index = i + 5*j;
+                let index = i + 5 * j;
                 if !self.elements[index].is_marked {
                     continue 'column;
                 }
@@ -56,7 +59,7 @@ impl Board {
 
         'row: for i in 0..5 {
             for j in 0..5 {
-                let index = 5*i + j;
+                let index = 5 * i + j;
                 if !self.elements[index].is_marked {
                     continue 'row;
                 }

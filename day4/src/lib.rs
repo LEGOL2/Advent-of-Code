@@ -1,18 +1,24 @@
-use std::{io::{BufReader, BufRead, Lines}, fs::File};
+use std::{
+    fs::File,
+    io::{BufRead, BufReader, Lines},
+};
 mod structs;
 use structs::{Board, BoardElement};
 
 pub fn day4_part1(reader: BufReader<File>) -> usize {
     let mut lines = reader.lines();
     let input_string = lines.next().unwrap().unwrap();
-    let numbers_to_call: Vec<usize> = input_string.split(',').map(|n| n.parse().unwrap()).collect();
+    let numbers_to_call: Vec<usize> = input_string
+        .split(',')
+        .map(|n| n.parse().unwrap())
+        .collect();
     let board_elements = read_tables(&mut lines);
     let number_of_boards = board_elements.len() / 25;
 
     let mut boards: Vec<Board> = Vec::new();
     for i in 0..number_of_boards {
         let mut temporary_board_elemets = Vec::new();
-        temporary_board_elemets.extend_from_slice(&board_elements[(25*i)..(25*i+25)]);
+        temporary_board_elemets.extend_from_slice(&board_elements[(25 * i)..(25 * i + 25)]);
         boards.push(Board::new(temporary_board_elemets));
     }
 
@@ -32,14 +38,17 @@ pub fn day4_part1(reader: BufReader<File>) -> usize {
 pub fn day4_part2(reader: BufReader<File>) -> usize {
     let mut lines = reader.lines();
     let input_string = lines.next().unwrap().unwrap();
-    let numbers_to_call: Vec<usize> = input_string.split(',').map(|n| n.parse().unwrap()).collect();
+    let numbers_to_call: Vec<usize> = input_string
+        .split(',')
+        .map(|n| n.parse().unwrap())
+        .collect();
     let board_elements = read_tables(&mut lines);
     let number_of_boards = board_elements.len() / 25;
 
     let mut boards: Vec<Board> = Vec::new();
     for i in 0..number_of_boards {
         let mut temporary_board_elemets = Vec::new();
-        temporary_board_elemets.extend_from_slice(&board_elements[(25*i)..(25*i+25)]);
+        temporary_board_elemets.extend_from_slice(&board_elements[(25 * i)..(25 * i + 25)]);
         boards.push(Board::new(temporary_board_elemets));
     }
 
@@ -83,7 +92,7 @@ fn read_tables(lines: &mut Lines<BufReader<File>>) -> Vec<BoardElement> {
                     let number: usize = item.parse().unwrap();
                     numbers.push(BoardElement::new(number));
                 }
-            },
+            }
             None => return numbers,
         }
     }

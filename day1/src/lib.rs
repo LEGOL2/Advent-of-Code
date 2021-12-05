@@ -12,8 +12,8 @@ fn depth_increase_count(scans: &Vec<usize>) -> usize {
 fn depth_increase_count_with_window(scans: &Vec<usize>) -> usize {
     let mut count = 0;
     for i in 0..scans.len() - 3 {
-        let first_measurement = scans[i] + scans[i+1] + scans[i+2];
-        let second_measurement = scans[i+1] + scans[i+2] + scans[i+3];
+        let first_measurement = scans[i] + scans[i + 1] + scans[i + 2];
+        let second_measurement = scans[i + 1] + scans[i + 2] + scans[i + 3];
         if second_measurement > first_measurement {
             count += 1;
         }
@@ -25,7 +25,6 @@ fn depth_increase_count_with_window(scans: &Vec<usize>) -> usize {
 #[cfg(test)]
 mod tests {
     use crate::{depth_increase_count, depth_increase_count_with_window};
-
 
     #[test]
     fn basic_example_part1() {
@@ -175,5 +174,4 @@ mod tests {
         assert_eq!(depth_increase_count(&scans), 1121);
         assert_eq!(depth_increase_count_with_window(&scans), 1065)
     }
-
 }
