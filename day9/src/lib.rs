@@ -4,8 +4,30 @@ use std::{
 };
 
 pub fn smoke_basin(input: Vec<u32>, width: usize, height: usize) -> usize {
-    let mut low_points: Vec<u32> = Vec::new();
+    let mut low_points: Vec<(u32, u32)> = Vec::new();
+    find_low_points(&input, width, height, &mut low_points);
 
+    low_points.iter().fold(0, |acc, p| acc + p.1) as usize + low_points.len()
+}
+
+pub fn find_three_largest_basins(
+    mut input: Vec<u32>,
+    mut width: usize,
+    mut height: usize,
+) -> usize {
+    let mut low_points: Vec<(u32, u32)> = Vec::new();
+    surround_with_9(&mut input, &mut width, &mut height);
+    find_low_points(&input, width, height, &mut low_points);
+
+    fill_basins(&mut input, width, &mut low_points)
+}
+
+fn find_low_points(
+    input: &Vec<u32>,
+    width: usize,
+    height: usize,
+    low_points: &mut Vec<(u32, u32)>,
+) {
     for (idx, elem) in input.iter().enumerate() {
         if idx % width > 0 {
             if *elem >= input[idx - 1] {
@@ -31,10 +53,52 @@ pub fn smoke_basin(input: Vec<u32>, width: usize, height: usize) -> usize {
             }
         }
 
-        low_points.push(*elem);
+        low_points.push((idx as u32, *elem));
+    }
+}
+
+fn surround_with_9(input: &mut Vec<u32>, width: &mut usize, height: &mut usize) {
+    *width += 2;
+    *height += 2;
+    for i in 0..*width {
+        input.insert(i, 9);
+        input.push(9);
+    }
+    for j in 1..*height - 1 {
+        input.insert(*width * j, 9);
+        input.insert(*width * j + *width - 1, 9);
+    }
+}
+
+fn fill_basins(input: &mut Vec<u32>, width: usize, low_points: &mut Vec<(u32, u32)>) -> usize {
+    let mut sizes: Vec<usize> = Vec::new();
+    for (idx, _) in low_points.iter() {
+        let mut counter = 0;
+        flood_fill(input, *idx, width, 9, &mut counter);
+        sizes.push(counter);
     }
 
-    low_points.iter().fold(0, |acc, p| acc + p) as usize + low_points.len()
+    sizes.sort();
+    sizes.reverse();
+    sizes[0] * sizes[1] * sizes[2]
+}
+
+fn flood_fill(input: &mut Vec<u32>, idx: u32, width: usize, new_value: u32, counter: &mut usize) {
+    if idx as usize > input.len() {
+        return;
+    }
+
+    if input[idx as usize] == new_value {
+        return;
+    }
+
+    input[idx as usize] = new_value;
+    *counter += 1;
+
+    flood_fill(input, idx + 1, width, new_value, counter);
+    flood_fill(input, idx + width as u32, width, new_value, counter);
+    flood_fill(input, idx - 1, width, new_value, counter);
+    flood_fill(input, idx - width as u32, width, new_value, counter);
 }
 
 pub fn read_input(filename: &str) -> Vec<u32> {
@@ -54,7 +118,7 @@ pub fn read_input(filename: &str) -> Vec<u32> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{read_input, smoke_basin};
+    use crate::{find_three_largest_basins, read_input, smoke_basin};
 
     #[test]
     fn example_part1() {
@@ -64,9 +128,23 @@ mod tests {
     }
 
     #[test]
+    fn example_part2() {
+        let input = read_input("test_input.txt");
+        let size = find_three_largest_basins(input, 10, 5);
+        assert_eq!(size, 1134);
+    }
+
+    #[test]
     fn part1() {
         let input = read_input("input.txt");
         let risk_level = smoke_basin(input, 100, 100);
         assert_eq!(risk_level, 575);
+    }
+
+    #[test]
+    fn part2() {
+        let input = read_input("input.txt");
+        let size = find_three_largest_basins(input, 100, 100);
+        assert_eq!(size, 1019700);
     }
 }
