@@ -1,20 +1,43 @@
 use core::panic;
-use std::{fs::File, io::{BufRead, BufReader}};
+use std::{
+    fs::File,
+    io::{BufRead, BufReader},
+};
 
 static OPENING_CHARS: [char; 4] = ['(', '[', '{', '<'];
 
-pub fn calculate_syntax_error_score(lines: &Vec<&str>) -> usize {
-    let mut score = 0;
+pub fn calculate_scores(lines: &Vec<String>) -> (usize, usize) {
+    let mut error_score = 0;
+    let mut autocomplete_scores: Vec<usize> = Vec::new();
 
     for line in lines {
-        is_valid(line, &mut score);
+        let mut stack: Vec<char> = Vec::new();
+        if let Some(ch) = is_valid(line, &mut stack) {
+            // Corrupted line, add error score.
+            error_score += char_to_score(ch);
+        } else {
+            // Incomplete line, add autocompletion score.
+            autocomplete_scores.push(calculate_autocomplete_score(&mut stack));
+        }
+    }
+
+    autocomplete_scores.sort();
+    let idx = autocomplete_scores.len() / 2;
+
+    (error_score, autocomplete_scores[idx])
+}
+
+pub fn calculate_autocomplete_score(stack: &mut Vec<char>) -> usize {
+    let mut score = 0;
+    for i in (0..stack.len()).rev() {
+        score *= 5;
+        score += autocomplete_char_to_score(opposite(stack[i]));
     }
 
     score
 }
 
-fn is_valid(line: &str, score: &mut usize) -> bool {
-    let mut stack: Vec<char> = Vec::new();
+fn is_valid(line: &str, stack: &mut Vec<char>) -> Option<char> {
     for ch in line.chars() {
         if OPENING_CHARS.contains(&ch) {
             stack.push(ch);
@@ -24,14 +47,13 @@ fn is_valid(line: &str, score: &mut usize) -> bool {
                     stack.pop();
                 } else {
                     println!("Expected {}, but found {} instead.", opposite(*elem), ch);
-                    *score += char_to_score(ch);
-                    return false;
+                    return Some(ch);
                 }
             }
         }
     }
 
-    true
+    None
 }
 
 fn is_matching(opening: char, closing: char) -> bool {
@@ -61,83 +83,43 @@ fn char_to_score(ch: char) -> usize {
     }
 }
 
+fn autocomplete_char_to_score(ch: char) -> usize {
+    match ch {
+        ')' => 1,
+        ']' => 2,
+        '}' => 3,
+        '>' => 4,
+        _ => panic!("Illegal character!"),
+    }
+}
+
 pub fn read_input(filename: &str) -> Vec<String> {
     let file = File::open(filename).expect("No such file");
     let buf = BufReader::new(file);
-    buf.lines().map(|l| l.expect("Could not parse the line.")).collect()
+    buf.lines()
+        .map(|l| l.expect("Could not parse the line."))
+        .collect()
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{is_valid, calculate_syntax_error_score, read_input};
+    use crate::{calculate_scores, read_input};
 
     #[test]
-    fn basic_tests() {
-        let line = "([])";
-        let mut score = 0;
-        assert!(is_valid(line, &mut score));
+    fn basic_test() {
+        let lines = read_input("test_input.txt");
 
-        let line = "{()()()}";
-        score = 0;
-        assert!(is_valid(line, &mut score));
-
-        let line = "<([{}])>";
-        score = 0;
-        assert!(is_valid(line, &mut score));
-
-        let line = "[<>({}){}[([])<>]]";
-        score = 0;
-        assert!(is_valid(line, &mut score));
-
-        let line = "(((((((((())))))))))";
-        score = 0;
-        assert!(is_valid(line, &mut score));
+        let (error_score, autocomplete_score) = calculate_scores(&lines);
+        assert_eq!(error_score, 26397);
+        assert_eq!(autocomplete_score, 288957);
     }
 
     #[test]
-    fn corrupted_chunks() {
-        let line = "(]";
-        let mut score = 0;
-        assert!(!is_valid(line, &mut score));
+    fn day10() {
+        let lines = read_input("input.txt");
 
-        let line = "{()()()>";
-        score = 0;
-        assert!(!is_valid(line, &mut score));
-
-        let line = "(((()))}";
-        score = 0;
-        assert!(!is_valid(line, &mut score));
-
-        let line = "<([]){()}[{}])";
-        score = 0;
-        assert!(!is_valid(line, &mut score));
-    }
-
-    #[test]
-    fn basic_sytax_error_test() {
-        let lines = vec![
-            "[({(<(())[]>[[{[]{<()<>>",
-            "[(()[<>])]({[<{<<[]>>(",
-            "{([(<{}[<>[]}>{[]{[(<()>",
-            "(((({<>}<{<{<>}{[]{[]{}",
-            "[[<[([]))<([[{}[[()]]]",
-            "[{[{({}]{}}([{[{{{}}([]",
-            "{<[[]]>}<{[{[{[]{()[[[]",
-            "[<(<(<(<{}))><([]([]()",
-            "<{([([[(<>()){}]>(<<{{",
-            "<{([{{}}[<[[[<>{}]]]>[]]",
-        ];
-
-        let score = calculate_syntax_error_score(&lines);
-        assert_eq!(score, 26397);
-    }
-
-    #[test]
-    fn day10_part1() {
-        let input = read_input("input.txt");
-        let lines = input.iter().map(|l| l.as_str()).collect();
-
-        let score = calculate_syntax_error_score(&lines);
-        assert_eq!(score, 318099);
+        let (error_score, autocomplete_score) = calculate_scores(&lines);
+        assert_eq!(error_score, 318099);
+        assert_eq!(autocomplete_score, 2389738699);
     }
 }
